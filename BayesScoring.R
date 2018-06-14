@@ -17,6 +17,13 @@ library(dplyr)
     Data_L3 = Data %>% 
                 filter(Latest.Season == 2018)
     
+  #Remove Burns, Byfuglien and Scott when listed under both positions
+    
+    Data$ID = paste(Data$Skater,Data$Latest.Season,sep=".")
+    
+    Data = Data %>%
+            filter(ID != "DUSTIN.BYFUGLIEN.2012" & ID != "BRENT.BURNS.2015" & ID != "JOHN.SCOTT.2012")
+    
   #Filter by position and compute raw scoring rates
     
     Fwds = Data %>%
