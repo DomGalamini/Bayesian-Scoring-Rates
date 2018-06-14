@@ -1,14 +1,14 @@
 require(ggplot2)
-require(SDMTools)
 require(MASS)
 require(dplyr)
 
 #Download the csv file here -> 
+
 #Once downloaded, run script & compare fwds or dmen using the FVF and DVD functions
 #Examples... FVF("SIDNEY.CROSBY","CONNOR.MCDAVID")
 #             DVD("ERIK.KARLSSON","MIKHAIL.SERGACHEV")
 
-  #Load data
+  #Import downloaded csv file as a data frame
     
     Data = read.csv(file.choose(), header = T)
   
@@ -27,17 +27,23 @@ require(dplyr)
             filter(pos == "D" & GP >= 41) %>%
             mutate(Rate = PP / TOI * 60)
     
-    #Adjust scoring rates and replace zeros with fudge factor
-    
-    #Compute Conversion Rates
+    #Adjust scoring rates and replace zeros with fudge factor = 1/1000
     
       conversion.rates.F = Fwds %>%
                           group_by(Latest.Season) %>%
                           summarise(Mean = mean(Rate))
       
+      conversion.rates.D = Dmen %>%
+                            group_by(Latest.Season) %>%
+                            summarise(Mean = mean(Rate))
+      
       mean_L3.F = conversion.rates.F %>%
                   filter(Latest.Season == 2018) %>%
                   .$Mean
+      
+      mean_L3.D = conversion.rates.D %>%
+                filter(Latest.Season == 2018) %>%
+                .$Mean
       
       Fwds = conversion.rates.F %>%
               mutate(Mean = mean_L3.F / Mean) %>%
@@ -45,22 +51,12 @@ require(dplyr)
               left_join(Fwds,conversion.rates.F, by = "Latest.Season") %>%
               mutate(Adj.Rate = ifelse(PP != 0,Rate * Convert,1/1000))
                   
-  
-      conversion.rates.D = Dmen %>%
-                            group_by(Latest.Season) %>%
-                            summarise(Mean = mean(Rate))
-      
-      mean_L3.D = conversion.rates.D %>%
-                filter(Latest.Season == 2018) %>%
-                .$Mean
-      
       Dmen = conversion.rates.D %>%
               mutate(Mean = mean_L3.D / Mean) %>%
               rename(Convert = Mean) %>%
               left_join(Dmen,conversion.rates.D, by = "Latest.Season") %>%
               mutate(Adj.Rate = ifelse(PP != 0,Rate * Convert,1/1000))
       
-  
   #Fitting priors to historical adjusted scoring rates
 
     #Forwards - fitting a Weibull prior
@@ -114,7 +110,7 @@ require(dplyr)
     
   FVF = function(A,B){
     
-    #Define Total Ice Time & Total Primary Points
+    #Define total ice time & total primary points
       
         #Skater A
         
@@ -126,7 +122,7 @@ require(dplyr)
         TOI.B = (Data_L3[Data_L3$Skater == B, c("TOI")]/60)
         PP.B = Data_L3[Data_L3$Skater == B, c("PP")]
     
-    #Compute Posterior to a Constant of Proportionality
+    #Compute posterior to a constant of proportionality
       
         #Skater A
         
@@ -138,7 +134,7 @@ require(dplyr)
         posterior.B = function(q){
         (q^PP.B)*exp(-q*TOI.B)*(q^(F.Prior$estimate[1] - 1))*exp(-(q/F.Prior$estimate[2])^F.Prior$estimate[1])}
     
-    #Find Maximum Posterior Density
+    #Find maximum posterior density
         
         #Skater A
         
@@ -150,7 +146,7 @@ require(dplyr)
         MaxRate.B = optimize(posterior.B,c(0,5),maximum = T)$maximum
         MaxDensity.B = posterior.B(MaxRate.B)
     
-    #Draw 100,000 Samples for Each Skater w/ Rejection Method
+    #Draw 100,000 samples for each skater with rejection method
     
         #Skater A
         
@@ -204,15 +200,15 @@ require(dplyr)
           
           Draws.B = Draws.B[1:100000,]
           
-    #Combine Skater Samples
+    #Combine skater samples
         
         Draws = cbind.data.frame(Draws.A$Samples,Draws.B$Samples)
         
-    #Estimate Probability A > B
+    #Estimate probability A > B
         
         AvsB = round(nrow(Draws[Draws[,1] >= Draws[,2],]) / 1000,0)
     
-    #Plot Posterior Distributions
+    #Plot posterior distributions
         
         data = data.frame(dens = c(Draws.A$Samples, Draws.B$Samples)
                       ,Skaters = rep(c(A,B), each = 100000))
@@ -231,7 +227,7 @@ require(dplyr)
   
   DVD = function(A,B){
     
-    #Define Total Ice Time & Total Primary Points
+    #Define total ice time & total primary points
     
         #Skater A
     
@@ -243,7 +239,7 @@ require(dplyr)
         TOI.B = (Data_L3[Data_L3$Skater == B, c("TOI")]/60)
         PP.B = Data_L3[Data_L3$Skater == B, c("P")]
     
-    #Draw 100,000 Samples for Each Skater  
+    #Draw 100,000 samples for each skater  
         
         #Skater A
         
@@ -255,12 +251,12 @@ require(dplyr)
         Draws.B = as.data.frame(c(rgamma(100000,shape = D.Prior$estimate[1] + PP.B, rate = D.Prior$estimate[2] + TOI.B)))
         colnames(Draws.B)[1] = "Samples"
         
-    #Estimate Probability A > B
+    #Estimate probability A > B
         
         Draws = cbind.data.frame(Draws.A$Samples,Draws.B$Samples)
         AvsB = round(nrow(Draws[Draws$`Draws.A$Samples` >= Draws.B$Samples,]) / 1000,0)
     
-    #Plot Posterior Distributions
+    #Plot posterior distributions
         
         data = data.frame(dens = c(Draws.A$Samples, Draws.B$Samples)
                        , Skaters = rep(c(A,B), each = 100000))
