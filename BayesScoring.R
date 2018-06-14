@@ -1,6 +1,6 @@
-require(ggplot2)
-require(MASS)
-require(dplyr)
+library(ggplot2)
+library(MASS)
+library(dplyr)
 
 #Download the csv file here -> 
 
@@ -20,41 +20,36 @@ require(dplyr)
   #Filter by position and compute raw scoring rates
     
     Fwds = Data %>%
-            filter(pos == "F" & GP >= 41) %>%
+            filter(pos == "F" & GP >= 60) %>%
             mutate(Rate = PP / TOI * 60)
     
     Dmen = Data %>% 
-            filter(pos == "D" & GP >= 41) %>%
+            filter(pos == "D" & GP >= 60) %>%
             mutate(Rate = PP / TOI * 60)
     
     #Adjust scoring rates and replace zeros with fudge factor = 1/1000
     
+      mean_L3.F = mean(Fwds[Fwds$Latest.Season == "2018",c("Rate")])
+      
+      mean_L3.D = mean(Dmen[Dmen$Latest.Season == "2018",c("Rate")])
+      
+      
       conversion.rates.F = Fwds %>%
-                          group_by(Latest.Season) %>%
-                          summarise(Mean = mean(Rate))
+                            group_by(Latest.Season) %>%
+                            summarise(Mean = mean(Rate))  %>%
+                            mutate(Mean = mean_L3.F / Mean) %>%
+                            rename(Convert = Mean) 
       
       conversion.rates.D = Dmen %>%
                             group_by(Latest.Season) %>%
-                            summarise(Mean = mean(Rate))
+                            summarise(Mean = mean(Rate)) %>%
+                            mutate(Mean = mean_L3.D / Mean) %>%
+                            rename(Convert = Mean) 
       
-      mean_L3.F = conversion.rates.F %>%
-                  filter(Latest.Season == 2018) %>%
-                  .$Mean
-      
-      mean_L3.D = conversion.rates.D %>%
-                filter(Latest.Season == 2018) %>%
-                .$Mean
-      
-      Fwds = conversion.rates.F %>%
-              mutate(Mean = mean_L3.F / Mean) %>%
-              rename(Convert = Mean) %>%
-              left_join(Fwds,conversion.rates.F, by = "Latest.Season") %>%
+      Fwds = left_join(Fwds,conversion.rates.F, by = "Latest.Season") %>%
               mutate(Adj.Rate = ifelse(PP != 0,Rate * Convert,1/1000))
                   
-      Dmen = conversion.rates.D %>%
-              mutate(Mean = mean_L3.D / Mean) %>%
-              rename(Convert = Mean) %>%
-              left_join(Dmen,conversion.rates.D, by = "Latest.Season") %>%
+      Dmen = left_join(Dmen,conversion.rates.D, by = "Latest.Season") %>%
               mutate(Adj.Rate = ifelse(PP != 0,Rate * Convert,1/1000))
       
   #Fitting priors to historical adjusted scoring rates
@@ -109,6 +104,10 @@ require(dplyr)
   #Example... FVF("CONNOR.MCDAVID","SIDNEY.CROSBY")
     
   FVF = function(A,B){
+    
+    #Error message for incorrect spelling or formatting
+    
+    if(A %in% Data_L3$Skater == F | B %in% Data_L3$Skater == F) stop("Forward(s) not found. Check spelling and/or formatting")
     
     #Define total ice time & total primary points
       
@@ -226,6 +225,10 @@ require(dplyr)
   #Example... DVD("ROMAN.POLAK","RASMUS.RISTOLAINEN")
   
   DVD = function(A,B){
+    
+    #Error message for incorrect spelling or formatting
+    
+    if(A %in% Data_L3$Skater == F | B %in% Data_L3$Skater == F) stop("Defender(s) not found. Check spelling and/or formatting")
     
     #Define total ice time & total primary points
     
