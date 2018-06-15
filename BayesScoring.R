@@ -3,10 +3,8 @@ library(MASS)
 library(dplyr)
 
 #Download the csv file here -> https://www.dropbox.com/s/u9hn1ha0jeo9yb1/Data.csv?dl=0
-
 #Once downloaded, run script & compare fwds or dmen using the FVF and DVD functions
-#Examples... FVF("SIDNEY.CROSBY","CONNOR.MCDAVID")
-#             DVD("ERIK.KARLSSON","MIKHAIL.SERGACHEV")
+#Examples... FVF("SIDNEY.CROSBY","CONNOR.MCDAVID")... DVD("ERIK.KARLSSON","MIKHAIL.SERGACHEV")
 
   #Import downloaded csv file as a data frame
     
@@ -69,8 +67,8 @@ library(dplyr)
               col = "orchid4",
               border = "black",
               xlab = "Primary Points per Hour",
-              main = "Fwds",
-              breaks = 20)
+              main = "Forwards",
+              breaks = 30)
       
         xfit = seq(min(Fwds$Adj.Rate), max(Fwds$Adj.Rate), length = 40)
     
@@ -91,9 +89,9 @@ library(dplyr)
         h = hist(Dmen$Adj.Rate,
               col = "cadetblue4",
               border = "black",
-              xlab = "Points per Hour",
+              xlab = "Primary Points per Hour",
               main = "Defensemen",
-              breaks = 20)
+              breaks = 30)
         
         xfit = seq(min(Dmen$Adj.Rate), max(Dmen$Adj.Rate), length = 40)
     
