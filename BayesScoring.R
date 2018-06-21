@@ -240,12 +240,12 @@ library(dplyr)
         #Skater A
     
         TOI.A = (Data_L3[Data_L3$Skater == A, c("TOI")]/60)
-        PP.A = Data_L3[Data_L3$Skater == A, c("P")]
+        PP.A = Data_L3[Data_L3$Skater == A, c("PP")]
         
         #Skater B
       
         TOI.B = (Data_L3[Data_L3$Skater == B, c("TOI")]/60)
-        PP.B = Data_L3[Data_L3$Skater == B, c("P")]
+        PP.B = Data_L3[Data_L3$Skater == B, c("PP")]
     
     #Draw 100,000 samples for each skater  
         
