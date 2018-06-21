@@ -20,7 +20,7 @@ library(dplyr)
     Data$ID = paste(Data$Skater,Data$Latest.Season,sep=".")
     
     Data = Data %>%
-            filter(ID != "DUSTIN.BYFUGLIEN.2012" & ID != "BRENT.BURNS.2015" & ID != "JOHN.SCOTT.2012")
+            filter(ID != "LUKE.WITKOWSKI.2018" & ID != "DUSTIN.BYFUGLIEN.2012" & ID != "BRENT.BURNS.2015" & ID != "JOHN.SCOTT.2012")
     
   #Filter by position and compute raw scoring rates
     
